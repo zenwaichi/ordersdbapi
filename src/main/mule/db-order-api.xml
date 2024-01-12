@@ -147,8 +147,21 @@ payload]]></ee:set-payload>
 			<db:input-parameters ><![CDATA[#[{ID:attributes.uriParams.orderID}]]]></db:input-parameters>
 		</db:query-single>
     </flow>
-	<flow name="get:\orders\delete:db-order-api-config">
+	<flow name="get:\orders\delete:db-order-api-config" maxConcurrency="1">
         <logger level="INFO" message="get:\orders\delete:db-order-api-config" />
+		<db:delete doc:name="Delete" doc:id="e18b3956-7fdc-417d-bfb6-effcf518a399" config-ref="Database_Config">
+			<db:sql ><![CDATA[delete from orders where orderID = :orderID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{orderID:attributes.queryParams.orderID}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="e2f7a9aa-932a-438f-bf18-a61617a285fc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-payload value='#["affected rows : " ++ payload]' doc:name="Set Payload" doc:id="94e6dc87-1960-4aa8-9632-429f9e56bcd9" />
     </flow>
 	<flow name="get:\orders\edit:db-order-api-config">
         <logger level="INFO" message="get:\orders\edit:db-order-api-config" />
