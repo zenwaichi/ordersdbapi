@@ -161,22 +161,25 @@ output application/json
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<set-payload value='#["affected rows : " ++ payload]' doc:name="Set Payload" doc:id="94e6dc87-1960-4aa8-9632-429f9e56bcd9" />
+		<set-payload value='"affected rows : " ++ payload' doc:name="Set Payload" doc:id="94e6dc87-1960-4aa8-9632-429f9e56bcd9" />
     </flow>
 	<flow name="get:\orders\edit:db-order-api-config">
         <logger level="INFO" message="get:\orders\edit:db-order-api-config" />
+		<db:update doc:name="Update" doc:id="e12d0180-b9c1-4bc0-b315-54171544281f" config-ref="Database_Config">
+			<db:sql ><![CDATA[update orders set orderDesc = :orderDesc where orderID = :orderID ]]></db:sql>
+			<db:input-parameters ><![CDATA[#[output application/java
+---
+{orderDesc : attributes.queryParams.orderDesc,
+	orderID : attributes.queryParams.orderID}]]]></db:input-parameters>
+		</db:update>
+		<set-payload value='"affected rows : " ++ payload.affectedRows' doc:name="Set Payload" doc:id="ca3305e4-dcb1-4ce8-92f3-8fa5d1f7130d" />
     </flow>
     <flow name="post:\orders\add:application\json:db-order-api-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  orderID: 1234,
-  orderDesc: "order description to be added"
-} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8cd74a51-9d55-4364-8ce4-20a09b14d2ce" message="post:\orders\add:db-order-api-config"/>
+		<db:insert doc:name="Insert" doc:id="67096318-e32f-4477-ace3-ebd7874d2261" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into orders(id,orderID,orderDesc) values(null,:orderID,:orderDesc)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{orderID: payload.orderID,orderDesc: payload.orderDesc }]]]></db:input-parameters>
+		</db:insert>
+		<set-payload value='"affected rows : " ++ payload.affectedRows' doc:name="Set Payload" doc:id="7124fa8a-b0fe-4b45-9c9b-7ff40dfd76f6" />
     </flow>
 </mule>
