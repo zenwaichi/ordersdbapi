@@ -123,45 +123,35 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="get:\orders\delete:db-order-api-config">
-        <logger level="INFO" message="get:\orders\delete:db-order-api-config" />
-		<db:select doc:name="Select" doc:id="d87c0cb2-fd58-4fa7-b0c9-e0a5dffe329c" config-ref="Database_Config">
-			<db:sql ><![CDATA[select orderID,orderDesc from orders]]></db:sql>
-		</db:select>
-    </flow>
-    <flow name="get:\orders\edit:db-order-api-config">
-        <logger level="INFO" message="get:\orders\edit:db-order-api-config" />
-    </flow>
     <flow name="get:\orders:db-order-api-config">
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
+		<db:select doc:name="Select" doc:id="d87c0cb2-fd58-4fa7-b0c9-e0a5dffe329c" config-ref="Database_Config">
+			<db:sql><![CDATA[select orderID,orderDesc from orders]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="a9bf1064-87bc-473f-90eb-f30c9c05e6a4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
 output application/json
 ---
-{
-  orderID: 1234,
-  orderDesc: "order description lorem ipsum"
-} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
     </flow>
-    <flow name="get:\orders\(orderID):db-order-api-config">
+	<flow name="get:\orders\(orderID):db-order-api-config">
         <ee:transform doc:name="Transform Message">
             <ee:variables>
                 <ee:set-variable variableName="orderID">attributes.uriParams.'orderID'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-        <ee:transform doc:name="Transform Message">
-            <ee:message>
-                <ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-  orderID: 1234,
-  orderDesc: "order description lorem ipsum"
-} as Object {encoding: "UTF-8", mediaType: "application/json"}]]></ee:set-payload>
-            </ee:message>
-        </ee:transform>
+		<db:query-single doc:name="Query single" doc:id="4634f040-e3e3-456b-b0f1-07126e753bef" config-ref="Database_Config">
+			<db:sql ><![CDATA[select orderID,orderDesc from orders where orderID = :ID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{ID:attributes.uriParams.orderID}]]]></db:input-parameters>
+		</db:query-single>
+    </flow>
+	<flow name="get:\orders\delete:db-order-api-config">
+        <logger level="INFO" message="get:\orders\delete:db-order-api-config" />
+    </flow>
+	<flow name="get:\orders\edit:db-order-api-config">
+        <logger level="INFO" message="get:\orders\edit:db-order-api-config" />
     </flow>
     <flow name="post:\orders\add:application\json:db-order-api-config">
         <ee:transform doc:name="Transform Message">
