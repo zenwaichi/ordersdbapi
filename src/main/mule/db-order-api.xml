@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
-    <db:config name="Database_Config" doc:name="Database Config" doc:id="90a1d767-a60b-44ec-8df5-0ddcce84a69a" >
-		<db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="mydb" />
-	</db:config>
-	<flow name="db-order-api-main">
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="90a1d767-a60b-44ec-8df5-0ddcce84a69a">
+        <db:my-sql-connection host="localhost" port="3306" user="root" password="root" database="mydb" />
+    </db:config>
+    <flow name="db-order-api-main">
         <http:listener config-ref="db-order-api-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
@@ -124,62 +123,62 @@ output application/json
         </error-handler>
     </flow>
     <flow name="get:\orders:db-order-api-config">
-		<db:select doc:name="Select" doc:id="d87c0cb2-fd58-4fa7-b0c9-e0a5dffe329c" config-ref="Database_Config">
-			<db:sql><![CDATA[select orderID,orderDesc from orders]]></db:sql>
-		</db:select>
-		<ee:transform doc:name="Transform Message" doc:id="a9bf1064-87bc-473f-90eb-f30c9c05e6a4" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <db:select doc:name="Select" doc:id="d87c0cb2-fd58-4fa7-b0c9-e0a5dffe329c" config-ref="Database_Config">
+            <db:sql><![CDATA[select orderID,orderDesc from orders]]></db:sql>
+        </db:select>
+        <ee:transform doc:name="Transform Message" doc:id="a9bf1064-87bc-473f-90eb-f30c9c05e6a4">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
+            </ee:message>
+        </ee:transform>
     </flow>
-	<flow name="get:\orders\(orderID):db-order-api-config">
+    <flow name="get:\orders\(orderID):db-order-api-config">
         <ee:transform doc:name="Transform Message">
             <ee:variables>
                 <ee:set-variable variableName="orderID">attributes.uriParams.'orderID'</ee:set-variable>
             </ee:variables>
         </ee:transform>
-		<db:query-single doc:name="Query single" doc:id="4634f040-e3e3-456b-b0f1-07126e753bef" config-ref="Database_Config">
-			<db:sql ><![CDATA[select orderID,orderDesc from orders where orderID = :ID]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{ID:attributes.uriParams.orderID}]]]></db:input-parameters>
-		</db:query-single>
+        <db:query-single doc:name="Query single" doc:id="4634f040-e3e3-456b-b0f1-07126e753bef" config-ref="Database_Config">
+            <db:sql><![CDATA[select orderID,orderDesc from orders where orderID = :ID]]></db:sql>
+            <db:input-parameters><![CDATA[#[{ID:attributes.uriParams.orderID}]]]></db:input-parameters>
+        </db:query-single>
     </flow>
-	<flow name="get:\orders\delete:db-order-api-config" maxConcurrency="1">
+    <flow name="get:\orders\delete:db-order-api-config" maxConcurrency="1">
         <logger level="INFO" message="get:\orders\delete:db-order-api-config" />
-		<db:delete doc:name="Delete" doc:id="e18b3956-7fdc-417d-bfb6-effcf518a399" config-ref="Database_Config">
-			<db:sql ><![CDATA[delete from orders where orderID = :orderID]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{orderID:attributes.queryParams.orderID}]]]></db:input-parameters>
-		</db:delete>
-		<ee:transform doc:name="Transform Message" doc:id="e2f7a9aa-932a-438f-bf18-a61617a285fc" >
-			<ee:message >
-				<ee:set-payload ><![CDATA[%dw 2.0
+        <db:delete doc:name="Delete" doc:id="e18b3956-7fdc-417d-bfb6-effcf518a399" config-ref="Database_Config">
+            <db:sql><![CDATA[delete from orders where orderID = :orderID]]></db:sql>
+            <db:input-parameters><![CDATA[#[{orderID:attributes.queryParams.orderID}]]]></db:input-parameters>
+        </db:delete>
+        <ee:transform doc:name="Transform Message" doc:id="e2f7a9aa-932a-438f-bf18-a61617a285fc">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
 payload]]></ee:set-payload>
-			</ee:message>
-		</ee:transform>
-		<set-payload value='"affected rows : " ++ payload' doc:name="Set Payload" doc:id="94e6dc87-1960-4aa8-9632-429f9e56bcd9" />
+            </ee:message>
+        </ee:transform>
+        <set-payload value="&quot;affected rows : &quot; ++ payload" doc:name="Set Payload" doc:id="94e6dc87-1960-4aa8-9632-429f9e56bcd9" />
     </flow>
-	<flow name="get:\orders\edit:db-order-api-config">
+    <flow name="get:\orders\edit:db-order-api-config">
         <logger level="INFO" message="get:\orders\edit:db-order-api-config" />
-		<db:update doc:name="Update" doc:id="e12d0180-b9c1-4bc0-b315-54171544281f" config-ref="Database_Config">
-			<db:sql ><![CDATA[update orders set orderDesc = :orderDesc where orderID = :orderID ]]></db:sql>
-			<db:input-parameters ><![CDATA[#[output application/java
+        <db:update doc:name="Update" doc:id="e12d0180-b9c1-4bc0-b315-54171544281f" config-ref="Database_Config">
+            <db:sql><![CDATA[update orders set orderDesc = :orderDesc where orderID = :orderID]]></db:sql>
+            <db:input-parameters><![CDATA[#[output application/java
 ---
 {orderDesc : attributes.queryParams.orderDesc,
 	orderID : attributes.queryParams.orderID}]]]></db:input-parameters>
-		</db:update>
-		<set-payload value='"affected rows : " ++ payload.affectedRows' doc:name="Set Payload" doc:id="ca3305e4-dcb1-4ce8-92f3-8fa5d1f7130d" />
+        </db:update>
+        <set-payload value="&quot;affected rows : &quot; ++ payload.affectedRows" doc:name="Set Payload" doc:id="ca3305e4-dcb1-4ce8-92f3-8fa5d1f7130d" />
     </flow>
     <flow name="post:\orders\add:application\json:db-order-api-config">
-		<logger level="INFO" doc:name="Logger" doc:id="8cd74a51-9d55-4364-8ce4-20a09b14d2ce" message="post:\orders\add:db-order-api-config"/>
-		<db:insert doc:name="Insert" doc:id="67096318-e32f-4477-ace3-ebd7874d2261" config-ref="Database_Config">
-			<db:sql ><![CDATA[insert into orders(id,orderID,orderDesc) values(null,:orderID,:orderDesc)]]></db:sql>
-			<db:input-parameters ><![CDATA[#[{orderID: payload.orderID,orderDesc: payload.orderDesc }]]]></db:input-parameters>
-		</db:insert>
-		<set-payload value='"affected rows : " ++ payload.affectedRows' doc:name="Set Payload" doc:id="7124fa8a-b0fe-4b45-9c9b-7ff40dfd76f6" />
+        <logger level="INFO" doc:name="Logger" doc:id="8cd74a51-9d55-4364-8ce4-20a09b14d2ce" message="post:\orders\add:db-order-api-config" />
+        <db:insert doc:name="Insert" doc:id="67096318-e32f-4477-ace3-ebd7874d2261" config-ref="Database_Config">
+            <db:sql><![CDATA[insert into orders(id,orderID,orderDesc) values(null,:orderID,:orderDesc)]]></db:sql>
+            <db:input-parameters><![CDATA[#[{orderID: payload.orderID,orderDesc: payload.orderDesc }]]]></db:input-parameters>
+        </db:insert>
+        <set-payload value="&quot;affected rows : &quot; ++ payload.affectedRows" doc:name="Set Payload" doc:id="7124fa8a-b0fe-4b45-9c9b-7ff40dfd76f6" />
     </flow>
 </mule>
